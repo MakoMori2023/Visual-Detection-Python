@@ -365,6 +365,7 @@ def select_camera_device():
 
 def operate_camera_device(camera_id):
     face_cascade = None
+    global face_detection_enabled
     if face_detection_enabled:
         cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         face_cascade = cv2.CascadeClassifier(cascade_path)
