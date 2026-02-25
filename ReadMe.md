@@ -78,7 +78,8 @@ pip install opencv-python mediapipe pyyaml
 
 
 Visual Detection Python Project. Copyright (C) Akira Amatsume
-This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.
-This is free software, and you are welcome to redistribute it under certain conditions.
+
+This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE. This is free software, and you are welcome to redistribute it under certain conditions.
+
 
 
