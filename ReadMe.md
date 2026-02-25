@@ -39,14 +39,13 @@ cd Visual-Detection-Python
 2. Install the required dependency libraries
 ```
 pip install opencv-python mediapipe pyyaml
-Prepare the model files
 ```
 
-3. Create a Model directory in the project root directory (if it does not exist)
-Place the following model files into the Model directory:
-- blaze_face_short_range.tflite (for face detection)
-- hand_landmarker.task (for hand gesture detection)
-- pose_landmarker_full.task (for human stickman detection)
+3. Create a Model directory in the project root directory (**if it does not exist**)
+    Place the following model files into the Model directory:
+    - blaze_face_short_range.tflite (for face detection)
+    - hand_landmarker.task (for hand gesture detection)
+    - pose_landmarker_full.task (for human stickman detection)
 
 4. Ensure the model file names and paths are consistent with the model_path configuration in config.yaml
 
