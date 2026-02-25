@@ -24,7 +24,7 @@ A real-time visual detection project implemented with Python + OpenCV + MediaPip
 Python 3.12 recommanded but 3.11 at least.
 Computer with camera.
 
-    You need to install dependency libraries manually, or try using pipenv to call flie in ./env/Pipfile:
+You need to install dependency libraries manually, or try using pipenv to call flie in ./env/Pipfile:
     - opencv-python (core of image processing)
     - mediapipe (core of hand gesture recognition)
     - pyyaml (for config file parsing)
@@ -53,7 +53,7 @@ There is the list of packages for this project.
 | six | 1.17.0 | >= 2.7 nor 3.0/3.1/3.2 |
 | sounddevice | 0.5.5 | >= 3.7 |
 
-Installation Steps
+# Installation Steps
 1. Clone / Download this project to your local machine
 ```
 git clone https://github.com/MakoMori2023/Visual-Detection-Python
@@ -74,8 +74,11 @@ pip install opencv-python mediapipe pyyaml
 
 5. Ensure the model file names and paths are consistent with the model_path configuration in config.yaml
 
+6. Start with type `python ./main.py` in the project directory. 
+
 
 Visual Detection Python Project. Copyright (C) Akira Amatsume
 This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.
 This is free software, and you are welcome to redistribute it under certain conditions.
+
 
