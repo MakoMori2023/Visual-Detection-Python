@@ -4,17 +4,24 @@ from camera import Camera
 from face_detection import FaceDetection
 from hand_gesture_detection import HandGestureDetection
 from human_stickman_detection import HumanStickmanDetection
+from config import CONFIG
 
 class DetectionController:
     def __init__(self):
-        self.camera = Camera(camera_index=0, window_name="Detection Camera (Multi-Function)")
+        self.camera = Camera()
+
         self.detectors = {
-            1: ("Face Detection", FaceDetection()),
-            2: ("Hand Gesture Detection", HandGestureDetection()),
-            3: ("Human Stick Figure Detection", HumanStickmanDetection())
+            int(k): (v["name"], eval(v["class"])()) 
+            for k, v in CONFIG["detection_controller"]["detectors"].items()
         }
         self.is_running = False
         self.draw_thread = None
+
+        self.draw_fps = CONFIG["detection_controller"]["draw_fps"]
+        self.thread_timeout = CONFIG["detection_controller"]["thread_timeout"]
+        self.command_prompt = CONFIG["detection_controller"]["commands"]["prompt"]
+        self.invalid_cmd_msg = CONFIG["detection_controller"]["commands"]["invalid_msg"]
+        self.exit_cmd = CONFIG["detection_controller"]["commands"]["exit_cmd"]
 
     def show_status(self):
         print("\n--------------------------------------------------")
@@ -29,7 +36,7 @@ class DetectionController:
         if not cmd:
             return None
         
-        if cmd == "exit()":
+        if cmd == self.exit_cmd:
             return ("exit", None)
         
         parts = cmd.split()
@@ -62,41 +69,45 @@ class DetectionController:
                 if frame is None:
                     time.sleep(0.01)
                     continue
+
+                frame = flip_frame(frame)
                 
                 for idx, (name, detector) in self.detectors.items():
                     frame = detector.draw(frame)
                 
                 self.camera.show_frame(frame)
                 
-                time.sleep(1/30)
+                time.sleep(1/self.draw_fps)
             except Exception as e:
                 print(f"\nDraw loop error: {e}")
                 time.sleep(0.01)
 
     def run(self):
         print("=== Multi-Function Visual Detection Program ===")
-        print("Commands:\n  Enable X (X=1/2/3)\n  Disable X (X=1/2/3)\n  exit()\n")
-        
+        detector_ids = [str(k) for k in self.detectors.keys()]
+        detector_keys_str = ', '.join(map(str, self.detectors.keys()))
+        print(f"Commands:\n  Enable X (X={detector_keys_str})\n  Disable X (X={detector_keys_str})\n  {self.exit_cmd}\n")
+    
         print("Starting camera...")
         try:
             self.camera.start()
         except RuntimeError as e:
             print(f"Failed to start camera, exiting: {e}")
             return
-        
+    
         self.is_running = True
         self.draw_thread = threading.Thread(target=self._draw_loop, daemon=True)
         self.draw_thread.start()
 
         while self.is_running:
             self.show_status()
-            cmd = input("Enter command: ").strip()
+            cmd = input(self.command_prompt).strip()
             parsed = self.parse_command(cmd)
-            
+        
             if not parsed:
-                print("Invalid command! Try: Enable 2 / Disable 3 / exit()")
+                print(self.invalid_cmd_msg)
                 continue
-            
+        
             action, detector_id = parsed
             if action == "exit":
                 break
@@ -105,7 +116,7 @@ class DetectionController:
         self.is_running = False
         self.camera.stop()
         if self.draw_thread is not None and self.draw_thread.is_alive():
-            self.draw_thread.join(timeout=2.0)
+            self.draw_thread.join(timeout=self.thread_timeout)
         print("\nShutting down...")
         print("All resources released, program exited safely")
 

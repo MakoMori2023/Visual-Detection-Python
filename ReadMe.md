@@ -1,4 +1,9 @@
 # Update
+## February 25, 2026
+- Move hard-coded parameters into config.yaml and load them via config.py.
+- Encapsulate repetitive logic (model loading, rendering, etc.) into utils.py.
+- No more coffee but milk.
+
 ## February 23, 2026
 - Remove unnecessary code.
 - All enabled functions cam be displayed on one screen.

@@ -1,45 +1,37 @@
 import cv2
-import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
-import os
+from config import CONFIG
+from utils import (
+    load_mediapipe_model,
+    convert_bgr_to_mp_image,
+    flip_frame,
+    draw_landmark_points,
+    draw_landmark_connections
+)
 
 class HandGestureDetection:
     def __init__(self):
         self.enabled = False
         self.detector = None
+
+        self.model_path = CONFIG["hand_gesture_detection"]["model_path"]
+        self.num_hands = CONFIG["hand_gesture_detection"]["num_hands"]
+        self.min_hand_detection_confidence = CONFIG["hand_gesture_detection"]["min_hand_detection_confidence"]
+        self.min_hand_presence_confidence = CONFIG["hand_gesture_detection"]["min_hand_presence_confidence"]
+        self.min_tracking_confidence = CONFIG["hand_gesture_detection"]["min_tracking_confidence"]
+        self.HAND_CONNECTIONS = CONFIG["hand_gesture_detection"]["hand_connections"]
+        self.draw_config = CONFIG["hand_gesture_detection"]["draw"]
+
         self._init_detector()
-        self.HAND_CONNECTIONS = [
-            (0, 1), (1, 2), (2, 3), (3, 4),
-            (0, 5), (5, 6), (6, 7), (7, 8),
-            (0, 9), (9, 10), (10, 11), (11, 12),
-            (0, 13), (13, 14), (14, 15), (15, 16),
-            (0, 17), (17, 18), (18, 19), (19, 20)
-        ]
 
     def _init_detector(self):
-        try:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            model_path = os.path.join(current_dir, "Model", "hand_landmarker.task")
-            
-            if not os.path.exists(model_path):
-                raise FileNotFoundError(f"Hand model file not found: {model_path}")
-            
-            base_options = python.BaseOptions(model_asset_path=model_path)
-            options = vision.HandLandmarkerOptions(
-                base_options=base_options,
-
-                num_hands=2,
-
-                min_hand_detection_confidence=0.5,
-                min_hand_presence_confidence=0.5,
-                min_tracking_confidence=0.5
-            )
-            
-            self.detector = vision.HandLandmarker.create_from_options(options)
-        except Exception as e:
-            print(f"Failed to initialize Hand Gesture Detector: {e}")
-            self.detector = None
+        self.detector = load_mediapipe_model(
+            model_path=self.model_path,
+            task_type="hand_landmarker",
+            num_hands=self.num_hands,
+            min_hand_detection_confidence=self.min_hand_detection_confidence,
+            min_hand_presence_confidence=self.min_hand_presence_confidence,
+            min_tracking_confidence=self.min_tracking_confidence
+        )
 
     def enable(self):
         if self.detector is None:
@@ -55,44 +47,41 @@ class HandGestureDetection:
     def detect(self, frame):
         if not self.enabled or frame is None or self.detector is None:
             return None
-        
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
-        
-        detection_result = self.detector.detect(mp_image)
-        return detection_result
+
+        mp_image = convert_bgr_to_mp_image(frame)
+        if mp_image is None:
+            return None
+        return self.detector.detect(mp_image)
 
     def draw(self, frame):
         if not self.enabled or frame is None or self.detector is None:
             return frame
         
-        frame = cv2.flip(frame, 1)
+        # frame = flip_frame(frame)
         detection_result = self.detect(frame)
         
         if not detection_result or not detection_result.hand_landmarks:
             return frame
         
-        frame_height, frame_width = frame.shape[:2]
+        frame_size = frame.shape[:2]  # (height, width)
         
         for hand_landmarks in detection_result.hand_landmarks:
-            for idx, landmark in enumerate(hand_landmarks):
-                x = int(landmark.x * frame_width)
-                y = int(landmark.y * frame_height)
-                cv2.circle(frame, (x, y), 5, (255, 0, 0), -1)
 
+            frame = draw_landmark_points(
+                frame=frame,
+                landmarks=hand_landmarks,
+                frame_size=frame_size,
+                circle_radius=self.draw_config["circle_radius"],
+                circle_color=tuple(self.draw_config["circle_color"])
+            )
 
-                # cv2.putText(frame, str(idx), (x+5, y), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 0), 1)
-            
-            for connection in self.HAND_CONNECTIONS:
-                start_idx, end_idx = connection
-                start_landmark = hand_landmarks[start_idx]
-                end_landmark = hand_landmarks[end_idx]
-                
-                start_x = int(start_landmark.x * frame_width)
-                start_y = int(start_landmark.y * frame_height)
-                end_x = int(end_landmark.x * frame_width)
-                end_y = int(end_landmark.y * frame_height)
-                
-                cv2.line(frame, (start_x, start_y), (end_x, end_y), (0, 255, 0), 2)
+            frame = draw_landmark_connections(
+                frame=frame,
+                landmarks=hand_landmarks,
+                connections=self.HAND_CONNECTIONS,
+                frame_size=frame_size,
+                line_thickness=self.draw_config["line_thickness"],
+                line_color=tuple(self.draw_config["line_color"])
+            )
         
         return frame

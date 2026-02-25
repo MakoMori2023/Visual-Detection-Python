@@ -8,11 +8,12 @@ def check_dependencies():
     try:
         import cv2
         import mediapipe
+        import yaml
         print("Dependencies check passed")
         return True
     except ImportError as e:
         print(f"Dependencies missing: {e}")
-        print("Install required packages: pip install opencv-python mediapipe")
+        print("Install required packages: pip install opencv-python mediapipe pyyaml")
         return False
 
 if __name__ == "__main__":
