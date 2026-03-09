@@ -9,7 +9,11 @@ from utils import flip_frame
 
 class DetectionController:
     def __init__(self):
-        self.camera = Camera()
+        camera_config = CONFIG["camera"]
+        self.camera = Camera(
+            camera_index=camera_config["index"],
+            window_name=camera_config["window_name"]
+        )
 
         self.detectors = {
             int(k): (v["name"], eval(v["class"])()) 
